@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>PHYSCI 70: Intro to Digital Fabrication </title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  <link href="../style.css" rel="stylesheet">
+
+   <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/arduino-light.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.8.0/highlight.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/arduino.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+</head>
+<div class="header">
+  <a href="../index.html" class="header">PHYS S-12: Introduction to Digital Fabrication</a>
+  <div class="header-right">
+    <a class="active" href="../aboutme/about.html">About Me</a>
+  </div>
+</div>
+<body>
+<div class="container-fluid">
+  
+	<h1> Buttons and Wiring</h1>
+  <h4> July 30, 2020 </h4>
+  <hr>
+  <p> Today, I finished wiring every component that I'll need for my final project! Initially, I didn't know if the Huzzah would have enough pins for my buzzer, LCD display, and arcade buttons, but luckily there were enough. However, I had to spend a lot of time analyzing the pinout guide for the Huzzah since some of the pins were input-only or didn't have pull-up resistors, which I needed for my arcade buttons. Some of the GPIO pins are also not recommended for input or output. Nevertheless, eventually I finally picked the right pins and connected everything! It's a bit messy, but as long as it works, appearance doesn't matter since the circuit will be inside the alarm box anyways.</p>
+  <!-- circuit -->
+  <p> I knew I needed to create functions which would light-up the buttons when they were pressed, so I initially created state machines for every single button color. </p>
+  <pre><code class="language-arduino">
+ int blueButton = 22;
+int greenButton = 19;
+int redButton = 23;
+int yellowButton = 18;
+
+int blueLed = 25;
+int greenLed = 26;
+int redLed = 17;
+int yellowLed = 16;
+
+int buzzerPin = 5;
+
+void setup(){
+  Serial.begin(115200);
+  pinMode(blueButton, INPUT_PULLUP);
+  pinMode(greenButton, INPUT_PULLUP);
+  pinMode(redButton, INPUT_PULLUP);
+  pinMode(yellowButton, INPUT_PULLUP);
+  pinMode(blueLed, OUTPUT);
+  pinMode(greenLed, OUTPUT);
+  pinMode(redLed, OUTPUT);
+  pinMode(yellowLed, OUTPUT);
+}
+void bluePress(){
+  int blueVal = digitalRead(blueButton);
+  if (blueVal == HIGH) {
+    digitalWrite(blueLed, LOW);
+  } else {
+    digitalWrite(blueLed, HIGH);
+  }
+}
+void greenPress(){
+  int greenVal = digitalRead(greenButton);
+  if (greenVal == HIGH) {
+    digitalWrite(greenLed, LOW);
+  } else {
+    digitalWrite(greenLed, HIGH);
+  }
+}
+void redPress(){
+  int redVal = digitalRead(redButton);
+  if (redVal == HIGH) {
+    digitalWrite(redLed, LOW);
+  } else {
+    digitalWrite(redLed, HIGH);
+  }
+}
+void yellowPress(){
+  int yellowVal = digitalRead(yellowButton);
+  if (yellowVal == HIGH) {
+    digitalWrite(yellowLed, LOW);
+  } else {
+    digitalWrite(yellowLed, HIGH);
+  }
+}
+void loop(){
+  bluePress();
+  greenPress();
+  redPress();
+  yellowPress();
+}
+  </code></pre>
+  <p> However, after class today where Rob introduced Object Oriented Programming and C++ classes, I attempted to repackage the code as a C++ class. This made the code a lot cleaner and simpler. Here is the code:</p>
+  <pre><code class="language-arduino">
+class buttonPress{
+  int ledPin;
+  int buttonPin;
+  int buttonVal; 
+public:
+buttonPress(int button, int led){
+buttonPin = button;
+ledPin = led;
+pinMode(buttonPin, INPUT_PULLUP);
+pinMode(ledPin, OUTPUT);
+
+}
+void Update(){
+  int buttonVal = digitalRead(buttonPin);
+  if (buttonVal == HIGH) {
+    digitalWrite(ledPin, LOW);
+  } else {
+    digitalWrite(ledPin, HIGH);
+  }
+}
+};
+
+buttonPress blue(22, 25);
+buttonPress red(23, 17);
+buttonPress yellow(18, 16);
+buttonPress green(19, 26);
+
+
+void setup(){
+}
+void loop(){
+  blue.Update();
+  red.Update();
+  yellow.Update();
+  green.Update();
+}
+  </code></pre>
+  <p> Here's the buttons in action! </p>
+  <!-- button video -->
+  <hr>
+  <h4> July 31, 2020 </h4>
+  <p> Today I wanted to try to code the Simon Says mechanism. I used <a href="https://learn.sparkfun.com/tutorials/sik-experiment-guide-for-arduino---v32/experiment-16-simon-says">this </a>sparkfun tutorial sample code to learn how to create the mechanism.</p>
+  <p> It seems as if my code from yesterday with the light-up buttons is not needed, but I am still glad that I learned more about OOP through that code. </p>
+  <p> This Simon Says code works by defining an array called gameBoard and using random() to generate a byte from 0 to 3 corresponding to certain colored buttons that are added to the game sequence. A function called playMoves() plays back the current game board and then another function called wait_for_button returns a byte called choice that is compared to the current move on the array. If the player presses the correct color, then they move onto the next round. A boolean called play_memory contains the functions related to game play and returns a boolean value once the player either wins or loses. Since the original code had a lot of extra features such as two other game modes, I modified the code to take up less memory. </p> 
+  <p> I took out the extra two game modes and defined different pins corresponding to my output devices. Instead of defining the number of rounds, I made it into an integer that I intend to be able to control from Firebase. I also removed the time-out function of the game. In addition, since I need to use the buzzer to play the alarm sound, I removed the sounds associated with the Simon Says game. Here is the code of the Simon Says mechanism before I attempted to merge it with my alarm code. </p>
+  <pre><code class="language-arduino">
+#define led_off      0 //Used to control LEDs
+#define choice_none     0 //Used to check buttons
+#define choice_red  (1 << 0)
+#define choice_green    (1 << 1)
+#define choice_blue (1 << 2)
+#define choice_yellow   (1 << 3)
+
+//LED pin definitions
+#define led_red     17
+#define led_green   26
+#define led_blue    25
+#define led_yellow  16
+
+// Button pin definitions
+#define button_red    23
+#define button_green  19
+#define button_blue   22
+#define button_yellow 18
+
+// Buzzer pin definition
+#define buzzer  5
+
+// Define game parameters
+int rounds = 5; //Number of rounds to succesfully remember before player turns off alarm, preset as 5
+byte gameBoard[32]; //Array that ontains the combination of buttons as player advances
+byte gameRound = 0; //Counts the number of succesful rounds the player has made it through
+
+void setup()
+{
+  //Setup hardware inputs/outputs
+
+  //Enable pull up resistors on buttons
+  pinMode(button_red, INPUT_PULLUP);
+  pinMode(button_green, INPUT_PULLUP);
+  pinMode(button_blue, INPUT_PULLUP);
+  pinMode(button_yellow, INPUT_PULLUP);
+
+  pinMode(led_red, OUTPUT);
+  pinMode(led_green, OUTPUT);
+  pinMode(led_blue, OUTPUT);
+  pinMode(led_yellow, OUTPUT);
+
+  pinMode(buzzer, OUTPUT);
+
+  play_winner(); // After setup is complete, signal that it is done
+}
+
+void loop()
+{
+  attractMode(); // Blink lights while waiting for player to press a button
+
+  // Indicate the start of game play
+  setLEDs(choice_red | choice_green | choice_blue | choice_yellow); // Turn all LEDs on
+  delay(1000);
+  setLEDs(led_off); // Turn off LEDs
+  delay(250);
+  // Play memory game and handle result
+  if (simon() == true)
+    play_winner(); // Player won, play winner tones
+  else
+    play_loser(255); // Player lost, play loser tones
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//The following functions are related to game play only
+
+
+boolean simon() // Returns 0 if player loses, or 1 if player wins
+{
+  randomSeed(millis()); // Seed the random generator with random amount of millis()
+
+  gameRound = 0; // Reset the game to the beginning
+
+  while (gameRound < rounds)
+  {
+    add_to_moves(); // Add a button to the current moves, then play them back
+
+    playMoves(); // Play back the current game board
+
+    //Require the player to repeat the sequence
+    for (byte currentMove = 0 ; currentMove < gameRound ; currentMove++)
+    {
+      byte choice = wait_for_button(); // See what button the user presses
+
+      if (choice != gameBoard[currentMove]) return false; // If the choice is incorect, player loses
+    }
+
+    delay(1000); // Player was correct, delay before playing moves
+  }
+
+  return true; // Player made it through all the rounds to win!
+}
+
+void playMoves() //plays back current gameBoard
+{
+  for (byte currentMove = 0 ; currentMove < gameRound ; currentMove++)
+  {
+    playLED(gameBoard[currentMove], 150);
+    delay(150); // Wait some amount of time between button playback
+  }
+}
+
+
+void add_to_moves() //adds new random button to gameBoard array by sampling timer
+{
+  byte newButton = random(0, 4); //gives number between 0-3 inclusive
+
+
+  if (newButton == 0) newButton = choice_red; //random number converted into specific color choices
+  else if (newButton == 1) newButton = choice_green;
+  else if (newButton == 2) newButton = choice_blue;
+  else if (newButton == 3) newButton = choice_yellow;
+
+  gameBoard[gameRound++] = newButton; // Add new button byte to the gameBoard array
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//The following functions control the hardware
+
+void setLEDs(byte leds) //lights specific LED according to choice byte
+{
+  if ((leds & choice_red) != 0)
+    digitalWrite(led_red, HIGH);
+  else
+    digitalWrite(led_red, LOW);
+
+  if ((leds & choice_green) != 0)
+    digitalWrite(led_green, HIGH);
+  else
+    digitalWrite(led_green, LOW);
+
+  if ((leds & choice_blue) != 0)
+    digitalWrite(led_blue, HIGH);
+  else
+    digitalWrite(led_blue, LOW);
+
+  if ((leds & choice_yellow) != 0)
+    digitalWrite(led_yellow, HIGH);
+  else
+    digitalWrite(led_yellow, LOW);
+}
+
+
+byte wait_for_button() //waits for button to be pressed and returns LED color as byte
+{
+  while (1) // Loop until button is pressed
+  {
+    byte button = checkButton();
+
+    if (button != choice_none)
+    {
+      playLED(button, 150); // Play the button the player just pressed
+
+      while (checkButton() != choice_none) ; // wait for player to release button
+
+      delay(10); // This helps with debouncing and accidental double taps
+
+      return button;
+    }
+
+  }
+
+}
+
+
+byte checkButton() // Returns a '1' bit in the position corresponding to choice_red, choice_green, etc.
+{
+  if (digitalRead(button_red) == 0) return (choice_red);
+  else if (digitalRead(button_green) == 0) return (choice_green);
+  else if (digitalRead(button_blue) == 0) return (choice_blue);
+  else if (digitalRead(button_yellow) == 0) return (choice_yellow);
+
+  return (choice_none); // If no button is pressed, return none
+}
+
+
+void playLED(byte which, int LED_delay) //Light up an LED
+{
+  setLEDs(which); //Turn on a given LED
+  delay(LED_delay);
+  setLEDs(led_off); // Turn off all LEDs
+}
+
+
+void play_winner() //play winner sound and lights
+{
+  setLEDs(choice_green | choice_blue);
+  winner_sound();
+  setLEDs(choice_red | choice_yellow);
+  winner_sound();
+  setLEDs(choice_green | choice_blue);
+  winner_sound();
+  setLEDs(choice_red | choice_yellow);
+  winner_sound();
+}
+
+
+void winner_sound() //function for winner sound
+{
+  // Toggle the buzzer at various speeds
+  for (byte x = 250 ; x > 70 ; x--)
+  {
+    for (byte y = 0 ; y < 3 ; y++)
+    {
+
+      digitalWrite(buzzer, LOW);
+      delayMicroseconds(x);
+      digitalWrite(buzzer, HIGH);
+      delayMicroseconds(x);
+    }
+  }
+}
+
+void play_loser(int lose_length) //flash loser lights
+{
+  setLEDs(choice_red | choice_green);
+  delay (lose_length);
+  setLEDs(choice_blue | choice_yellow);
+  delay (lose_length);
+  setLEDs(choice_red | choice_green);
+  delay (lose_length);
+  setLEDs(choice_blue | choice_yellow);
+  delay (lose_length);
+}
+
+
+void attractMode() //show "attract mode" display while waiting for player to first press button to start game
+{
+  while (1)
+  {
+    setLEDs(choice_red);
+    delay(100);
+    if (checkButton() != choice_none) return;
+
+    setLEDs(choice_blue);
+    delay(100);
+    if (checkButton() != choice_none) return;
+
+    setLEDs(choice_green);
+    delay(100);
+    if (checkButton() != choice_none) return;
+
+    setLEDs(choice_yellow);
+    delay(100);
+    if (checkButton() != choice_none) return;
+  }
+}
+  </code></pre>
+  <hr>
+  <h4> August, 1 2020 </h4>
+  <p> Today I attempted to combine my alarm code with my Simon Says code. I failed. </p>
+  <hr>
+  <h4> August 3, 2020 </h4>
+  <p> Finally got the buzzer working without using delay! Originally, I used the myTone function written by Nathan, then he gave me code that allowed buzzing without delay, but then Rob helped me figure out how to sound the buzzer with PWM, and I was able to use PWM and modify the blink without delay code to get my buzzer working without delay! I'm glad that both my time display and buzzer are now working simultaneously, although the Simon Says mechanism will be the hardest to get working without delay. Here's the code for the buzzer without delay! </p>
+  <pre><code class="language-arduino">
+if (alarm_condition == 1) { //function for alarm buzzing
+    if (currentMillis - alarmMillis >= beep) {
+      alarmMillis = currentMillis;
+      if (buzzerState == LOW) {
+        ledcWriteTone(buzzerChannel, 400);
+        ledcWrite (buzzerChannel, 125);
+        buzzerState = HIGH;
+      } else {
+        ledcWriteTone(buzzerChannel, 400);
+        ledcWrite(buzzerChannel, 0);
+        buzzerState = LOW;
+      }
+    }
+  }
+  </code></pre>
+  <hr>
+  <h4> August, 3 2020 </h4>
+  <hr>
+  <p> I created some code that will turn off the alarm with a press of a button without the Simon game in case I cannot figure out the Simon game in time. </p>
+  <hr>
+  <h4> August, 4 2020 </h4>
+  <hr>
+  <p> I succeeded! Instead of trying to convert all of the Simon Says game from using delays into using no delays (which was really difficult with all the for and while loops), I decided to momentarily shut off the time display feature while the alarm is going off so that I have no need for using millis in the Simon game. This switches the Arduino's task over to the Simon game completely until it is finished! This works! Yes!</p>
+  <p> Instead of the default winner sound, I replaced the winner sound with the victory fanfare from FFVII since I'm a nerd. </p>
+  <p> I can't reset the alarm yet, but I think I just need to comb through my code a bit to find out how to do that! Next, some changes to firebase, and I think I'm all good! </p>
+</div>
+</body>

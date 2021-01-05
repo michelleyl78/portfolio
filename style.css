@@ -1,0 +1,97 @@
+body {
+	font-family: Trebuchet MS,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Tahoma,sans-serif; 
+    font-size: 20px;
+    line-height: 1.8;
+    background-color: #cac7d6;
+  }
+
+p {font-size: 16px;
+
+}
+.margin {margin-bottom: 15px;
+}
+
+
+.container-fluid {
+  padding: 30px;
+  padding-bottom: 40px;
+  margin-right: auto;
+  margin-left: auto;
+  max-width: calc(1100px - (5px));
+  background-color: white;
+}
+.header {
+  overflow: hidden;
+  background-color:#C0C0C0;
+  vertical-align: center;
+} 
+#index div{
+  margin-left: 30px;
+}
+.video{
+  justify-content: center;
+  display:flex;
+}
+
+/* Style the header links */
+.header a {
+  vertical-align: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  padding: 14px;
+  text-decoration: none;
+  font-size: 30px;
+  font-family: Trebuchet MS,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Tahoma,sans-serif; 
+  line-height: 25px;
+  border-radius:4px;
+  margin-right:10px;
+}
+.center{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Style the logo link (notice that we set the same value of line-height and font-size to prevent the header to increase when the font gets bigger */
+.header a.logo {
+  font-size: 25px;
+  font-family: Trebuchet MS,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Tahoma,sans-serif; 
+  font-weight: bold;
+}
+
+/* Change the background color on mouse-over */
+.header a:hover {
+  background-color: #DCBDF7;
+  color: white;
+}
+
+/* Style the active/current link*/
+.header a.active {
+  background-color:#6a197d;
+  color: white;
+}
+
+/* Float the link section to the right */
+.header-right {
+  float: right;
+}
+.about {
+  text-align: center;
+	font-size: 25px;
+}
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  flex-wrap: wrap;
+
+}
+
+.footer{
+  overflow: hidden;
+  background-color:#6A687A;
+  padding: 10px 20px;
+  margin-top: 0px;
+}
