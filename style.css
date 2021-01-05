@@ -22,8 +22,8 @@ p {font-size: 16px;
 }
 .header {
   overflow: hidden;
-  background-color:#C0C0C0;
-  vertical-align: center;
+  background-color:#6A687A;
+  padding: 20px 10px;
 } 
 #index div{
   margin-left: 30px;
@@ -33,10 +33,8 @@ p {font-size: 16px;
   display:flex;
 }
 
-/* Style the header links */
-.header a {
-  vertical-align: center;
-  justify-content: center;
+.header a{
+  float: left;
   color: white;
   text-align: center;
   padding: 14px;
@@ -45,7 +43,11 @@ p {font-size: 16px;
   font-family: Trebuchet MS,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Tahoma,sans-serif; 
   line-height: 25px;
   border-radius:4px;
-  margin-right:10px;
+  margin-right: 10px;
+}
+#headerbox {
+  background-color:#6A687A;
+  font-size: 50px;
 }
 .center{
   display: block;
@@ -94,4 +96,29 @@ p {font-size: 16px;
   background-color:#6A687A;
   padding: 10px 20px;
   margin-top: 0px;
+}
+.btn {
+  flex: 1 1 auto;
+  margin: 10px;
+  padding: 30px;
+  text-align: center;
+  transition: 0.5s;
+  background-size:200% auto;
+  color: black;
+ /* text-shadow: 0px 0px 10px rgba(0,0,0,0.2);*/
+  box-shadow: 0 0 20px #eee;
+  border-radius: 10px;
+  width: 100%;
+  font-size: 30px;
+ }
+
+
+/* <- Design of Buttons for Landing Page */
+
+.btn:hover {
+  background-position: right center; /* change the direction of the change here */
+}
+
+.btn-1 {
+  background-image: linear-gradient(to right, #DCBDF7 0%, #cac7d6 51%, #DCBDF7 100%);
 }
